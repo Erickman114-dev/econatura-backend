@@ -1,16 +1,16 @@
 const express = require('express');
 const router = express.Router();
-
+const { handleUploadSingle } = require('../middlewares/upload');
 const trabajadoresCntrl = require('../controladores/trabajadoresControlador');
 
 router.get('/',trabajadoresCntrl.index);
 
 router.get('/:id',trabajadoresCntrl.show);
 
-router.post('/',trabajadoresCntrl.store);
+router.post('/', handleUploadSingle('trabajadores', 'imagen'), trabajadoresCntrl.store);
 
 
-router.put('/:id',trabajadoresCntrl.update);
+router.put('/:id', handleUploadSingle('trabajadores', 'imagen'), trabajadoresCntrl.update);
 
 
 //router.patch('/:id',trabajadoresCntrl.partialUpdate);

@@ -7,16 +7,8 @@ const Producto = sequelize.define('Producto', {
     primaryKey: true,
     autoIncrement: true
   },
-  categoria_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'categorias',
-      key: 'id'
-    }
-  },
   nombre: {
-    type: DataTypes.STRING(150),
+    type: DataTypes.STRING,
     allowNull: false
   },
   descripcion: {
@@ -26,31 +18,17 @@ const Producto = sequelize.define('Producto', {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false
   },
-  descuento: {
-    type: DataTypes.DECIMAL(5, 2),
-    defaultValue: 0.00
-  },
   stock: {
     type: DataTypes.INTEGER,
     defaultValue: 0
   },
-  imagen_1: {
-    type: DataTypes.STRING(500),
+  categoria_id: {
+    type: DataTypes.INTEGER,
     allowNull: false
-  },
-  imagen_2: {
-    type: DataTypes.STRING(500)
-  },
-  imagen_3: {
-    type: DataTypes.STRING(500)
-  },
-  estado: {
-    type: DataTypes.ENUM('ACTIVO', 'INACTIVO'),
-    defaultValue: 'ACTIVO'
   }
 }, {
   tableName: 'productos',
-  timestamps: false
+  timestamps: true
 });
 
 module.exports = Producto;

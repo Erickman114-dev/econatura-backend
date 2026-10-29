@@ -23,14 +23,19 @@ const express = require('express');
 const cors = require('cors');
 const { sequelize } = require('./modelos');
 const apiRutas = require('./rutas');
+const path = require('path');
 
 const app = express();
 
 // Middlewares obligatorios
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Montaje de rutas API (ejemplo: http://localhost:3000/api/productos)
+// Servidor de contenido estático para la carpeta uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Montaje de rutas API (http://localhost:3000/productos)
 app.use(apiRutas);
 
 const PORT = process.env.PORT || 3000;

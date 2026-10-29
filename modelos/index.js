@@ -8,6 +8,7 @@ const Cliente = require('./Cliente');
 const Pedido = require('./Pedido');
 const DetallePedido = require('./DetallePedido');
 const Factura = require('./Factura');
+const ProductoImagen = require('./ProductoImagen');
 
 // Relación Puestos <-> Trabajadores
 Puesto.hasMany(Trabajador, { foreignKey: 'puesto_id', as: 'trabajadores' });
@@ -33,6 +34,18 @@ DetallePedido.belongsTo(Producto, { foreignKey: 'producto_id', as: 'producto' })
 Pedido.hasOne(Factura, { foreignKey: 'pedido_id', as: 'factura' });
 Factura.belongsTo(Pedido, { foreignKey: 'pedido_id', as: 'pedido' });
 
+Producto.hasMany(ProductoImagen, {
+  foreignKey: 'producto_id',
+  as: 'imagenes',
+  onDelete: 'CASCADE'
+});
+
+// Una imagen pertenece a un solo Producto
+ProductoImagen.belongsTo(Producto, {
+  foreignKey: 'producto_id',
+  as: 'producto'
+});
+
 module.exports = {
   sequelize,
   Puesto,
@@ -42,5 +55,6 @@ module.exports = {
   Cliente,
   Pedido,
   DetallePedido,
-  Factura
+  Factura,
+  ProductoImagen
 };
