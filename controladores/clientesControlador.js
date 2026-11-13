@@ -1,85 +1,156 @@
 const { Cliente, Pedido } = require('../modelos');
 
+
 module.exports = {
-  // Obtener todos los clientes (Panel Admin)
+  // GET: Obtener todos los clientes
   index: async (req, res) => {
     try {
       const clientes = await Cliente.findAll({
-        attributes: { exclude: ['contrasena'] }
+        attributes: { exclude: ['contrasena'] } // Por seguridad no devolvemos la contraseña
       });
-      return res.json(clientes);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Lista de clientes obtenida correctamente',
+        data: clientes
+      });
     } catch (error) {
-      return res.status(500).json({ mensaje: 'Error al consultar clientes', error: error.message });
+      return res.status(500).json({
+        success: false,
+        message: 'Error al consultar clientes',
+        data: error.message
+      });
     }
   },
 
-  // Perfil / Obtener cliente por ID
+  // GET: Obtener cliente por ID
   show: async (req, res) => {
     try {
       const { id } = req.params;
       const cliente = await Cliente.findByPk(id, {
-        attributes: { exclude: ['contrasena'] },
-        include: [{ model: Pedido, as: 'pedidos' }]
+        attributes: { exclude: ['contrasena'] }
       });
 
       if (!cliente) {
-        return res.status(404).json({ mensaje: 'Cliente no encontrado' });
+        return res.status(404).json({
+          success: false,
+          message: 'Cliente no encontrado',
+          data: null
+        });
       }
 
-      return res.json(cliente);
+      return res.status(200).json({
+        success: true,
+        message: 'Cliente obtenido correctamente',
+        data: cliente
+      });
     } catch (error) {
-      return res.status(500).json({ mensaje: 'Error al obtener cliente', error: error.message });
+      return res.status(500).json({
+        success: false,
+        message: 'Error al obtener el cliente',
+        data: error.message
+      });
     }
   },
 
-  // Registro de nuevo cliente
+  // POST: Crear cliente
   store: async (req, res) => {
     try {
       const nuevoCliente = await Cliente.create(req.body);
-      
-      const respuesta = nuevoCliente.toJSON();
-      delete respuesta.contrasena;
+      const clienteRespuesta = nuevoCliente.toJSON();
+      delete clienteRespuesta.contrasena;
 
       return res.status(201).json({
-        mensaje: 'Cliente registrado con éxito',
-        cliente: respuesta
+        success: true,
+        message: 'Cliente registrado con éxito',
+        data: clienteRespuesta
       });
     } catch (error) {
-      return res.status(400).json({ mensaje: 'Error al registrar cliente', error: error.message });
+      // Manejo específico de correo duplicado o errores de modelo Sequelize
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        return res.status(400).json({
+          success: false,
+          message: 'El correo electrónico ya se encuentra registrado',
+          data: error.errors.map(e => ({ campo: e.path, mensaje: e.message }))
+        });
+      }
+
+      return res.status(400).json({
+        success: false,
+        message: 'Error al registrar el cliente',
+        data: error.errors ? error.errors.map(e => e.message) : error.message
+      });
     }
   },
 
-  // Actualizar datos del cliente
+  // PUT: Actualizar cliente
   update: async (req, res) => {
     try {
       const { id } = req.params;
       const cliente = await Cliente.findByPk(id);
 
       if (!cliente) {
-        return res.status(404).json({ mensaje: 'Cliente no encontrado' });
+        return res.status(404).json({
+          success: false,
+          message: 'Cliente no encontrado',
+          data: null
+        });
       }
 
       await cliente.update(req.body);
-      return res.json({ mensaje: 'Cliente actualizado correctamente', cliente });
+
+      const clienteRespuesta = cliente.toJSON();
+      delete clienteRespuesta.contrasena;
+
+      return res.status(200).json({
+        success: true,
+        message: 'Cliente actualizado correctamente',
+        data: clienteRespuesta
+      });
     } catch (error) {
-      return res.status(400).json({ mensaje: 'Error al actualizar cliente', error: error.message });
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        return res.status(400).json({
+          success: false,
+          message: 'El correo electrónico ya está en uso por otro cliente',
+          data: error.errors.map(e => ({ campo: e.path, mensaje: e.message }))
+        });
+      }
+
+      return res.status(400).json({
+        success: false,
+        message: 'Error al actualizar el cliente',
+        data: error.errors ? error.errors.map(e => e.message) : error.message
+      });
     }
   },
 
-  // Dar de baja o eliminar cliente
+  // DELETE: Eliminar cliente
   destroy: async (req, res) => {
     try {
       const { id } = req.params;
       const cliente = await Cliente.findByPk(id);
 
       if (!cliente) {
-        return res.status(404).json({ mensaje: 'Cliente no encontrado' });
+        return res.status(404).json({
+          success: false,
+          message: 'Cliente no encontrado',
+          data: null
+        });
       }
 
       await cliente.destroy();
-      return res.json({ mensaje: 'Cliente eliminado correctamente' });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Cliente eliminado correctamente',
+        data: { id: parseInt(id) }
+      });
     } catch (error) {
-      return res.status(500).json({ mensaje: 'Error al eliminar cliente', error: error.message });
+      return res.status(500).json({
+        success: false,
+        message: 'Error al eliminar el cliente',
+        data: error.message
+      });
     }
   }
 };

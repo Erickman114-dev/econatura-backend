@@ -100,12 +100,18 @@ store: async (req, res) => {
   update: async (req, res) => {
     try {
       const { id } = req.params;
+
+      // 1. Obtener el producto junto con sus imágenes actuales ordenadas
       const producto = await Producto.findByPk(id, {
-        include: [{ model: ProductoImagen, as: 'imagenes' }]
+        include: [{ 
+          model: ProductoImagen, 
+          as: 'imagenes',
+          order: [['id', 'ASC']] // Garantiza mantener el orden cronológico
+        }]
       });
 
       if (!producto) {
-        if (req.files) {
+        if (req.files && req.files.length > 0) {
           req.files.forEach(file => borrarImagen(`/uploads/productos/${file.filename}`));
         }
         return res.status(404).json({
@@ -115,40 +121,48 @@ store: async (req, res) => {
         });
       }
 
-      // 1. Actualizar datos de texto del producto
+      // 2. Actualizar los campos de texto del producto
       await producto.update(req.body);
 
-      // 2. Si se enviaron nuevas imágenes, borrar las viejas del disco y guardar las nuevas
+      // 3. Reemplazar imágenes posicionalmente
       if (req.files && req.files.length > 0) {
-        if (producto.imagenes && producto.imagenes.length > 0) {
-          producto.imagenes.forEach(img => borrarImagen(img.ruta_imagen));
-          await ProductoImagen.destroy({ where: { producto_id: id } });
-        }
+        const imagenesExistentes = producto.imagenes || [];
 
-        const nuevasImagenes = req.files.map(file => ({
-          ruta_imagen: `/uploads/productos/${file.filename}`,
-          producto_id: id
-        }));
-        await ProductoImagen.bulkCreate(nuevasImagenes);
+        for (let i = 0; i < req.files.length; i++) {
+          const nuevaRuta = `/uploads/productos/${req.files[i].filename}`;
+
+          if (imagenesExistentes[i]) {
+            // Reemplaza la imagen guardada en la posición 'i'
+            borrarImagen(imagenesExistentes[i].ruta_imagen); // Elimina archivo antiguo
+            await imagenesExistentes[i].update({ ruta_imagen: nuevaRuta });
+          } else {
+            // Si se envían más imágenes de las que existían previamente, se agrega un nuevo registro
+            await ProductoImagen.create({
+              ruta_imagen: nuevaRuta,
+              producto_id: producto.id
+            });
+          }
+        }
       }
 
-      // 3. Consultar estado final
+      // 4. Consultar el producto actualizado con sus imágenes finales
       const productoActualizado = await Producto.findByPk(id, {
         include: [{ model: ProductoImagen, as: 'imagenes', attributes: ['id', 'ruta_imagen'] }]
       });
 
       return res.status(200).json({
         success: true,
-        message: 'Producto actualizado correctamente',
+        message: 'Producto e imágenes actualizados correctamente',
         data: productoActualizado
       });
+
     } catch (error) {
-      if (req.files) {
+      if (req.files && req.files.length > 0) {
         req.files.forEach(file => borrarImagen(`/uploads/productos/${file.filename}`));
       }
       return res.status(400).json({
         success: false,
-        message: 'Error al actualizar producto',
+        message: 'Error al actualizar el producto',
         data: error.message
       });
     }
