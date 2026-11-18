@@ -26,6 +26,10 @@ const validarProductoStore = [
     .notEmpty().withMessage('El ID de la categoría es obligatorio')
     .isInt({ min: 1 }).withMessage('La categoría debe ser un número entero positivo')
     .toInt(),
+  body('estado')
+    .optional()
+    .isIn(['ACTIVO', 'INACTIVO']).withMessage('El estado debe ser ACTIVO o INACTIVO'),
+
     body('imagenes')
     .custom((value, { req }) => {
       if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
@@ -64,6 +68,10 @@ const validarProductoUpdate = [
     .optional()
     .isInt({ min: 1 }).withMessage('La categoría debe ser un número entero positivo')
     .toInt(),
+  body('estado')
+    .optional()
+    .isIn(['ACTIVO', 'INACTIVO']).withMessage('El estado debe ser ACTIVO o INACTIVO'),
+    
     body('imagenes')
     .custom((value, { req }) => {
       if (req.files && Array.isArray(req.files) && req.files.length > 3) {

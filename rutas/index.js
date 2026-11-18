@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const authRutas = require('./authRutas');
 
+router.use('/auth', authRutas);
 router.use('/puestos', require('./puestosRutas'));
 router.use('/trabajadores', require('./trabajadoresRutas'));
 router.use('/categorias', require('./categoriasRutas'));

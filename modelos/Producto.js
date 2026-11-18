@@ -25,6 +25,11 @@ const Producto = sequelize.define('Producto', {
   categoria_id: {
     type: DataTypes.INTEGER,
     allowNull: false
+  },
+  estado: {
+    type: DataTypes.STRING(20), // O DataTypes.ENUM('ACTIVO', 'INACTIVO') si tu BD lo soporta
+    allowNull: false,
+    defaultValue: 'ACTIVO'
   }
 }, {
   tableName: 'productos',
